@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kad Ramadan Interaktif</title>
+    <style>
+        /* --- IMPORT FONT --- */
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+
+:root {
+            --primary-gold: #d4af37;
+            --secondary-gold: #fcd34d;
+            --card-bg: rgba(30, 41, 59, 0.85); 
+            --overlay-bg: rgba(15, 23, 42, 0.98);
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+            --flame-orange: #ffc107;
+            --flame-yellow: #ffd54f;
+            /* Warna Pelita */
+            --bamboo-light: #d7ccc8;
+            --bamboo-dark: #8d6e63;
+            --can-green: #2e7d32;
+        }
+
+body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-light);
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #000; /* Default background */
+        }
+
+/* --- INTRO VIDEO OVERLAY (BARU) --- */
+        #introOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 9999; /* Paling atas */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease, visibility 1s;
+        }
+
+#introOverlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+#introVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Pastikan video penuh tapi tak crop */
+        }
+
+#startVideoBtn {
+            position: absolute;
+            bottom: 20%;
+            padding: 15px 30px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #000;
+            background: linear-gradient(45deg, var(--primary-gold), var(--secondary-gold));
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+            animation: pulseBtn 2s infinite;
+            z-index: 10000;
+        }
+
+@keyframes pulseBtn {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+
+/* --- SISTEM LATAR BELAKANG & PENCAHAYAAN --- */
+        .background-image {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            /* Gambar Asal (Sebelum Buka) */
+            background: url('https://arleta.site/interactivelink/3085/177120781181.jpeg') no-repeat center center;
+            background-size: cover;
+            z-index: -3;
+            transition: background-image 0.8s ease-in-out; 
+        }
+
+.dark-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: -2; 
+            transition: background 1.5s ease-in-out; 
+        }
+
+.container {
+            position: relative;
+            width: 90%;
+            max-width: 480px;
+            height: 750px; 
+            perspective: 1000px;
+            z-index: 1;
+        }
+
+/* --- KAD UTAMA --- */
+        .card {
+            width: 100%;
+            height: 100%;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            backdrop-filter: blur(5px);
+            transition: all 0.8s ease; 
+        }
+
+.card.open {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            backdrop-filter: none !important;
+        }
+
+/* --- LOCK SCREEN (BACA NIAT) --- */
+        .lock-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay-bg);
+            backdrop-filter: blur(8px);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.8s ease, visibility 0.8s;
+            border-radius: 24px; 
+        }
+
+.lock-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+.icon-header {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+        }
+
+.instruction {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+.niat-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+.arabic-text {
+            font-family: 'Amiri', serif;
+            font-size: 1.6rem;
+            line-height: 1.8;
+            color: var(--primary-gold);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+.rumi-text {
+            font-size: 0.9rem;
+            font-style: italic;
+            color: var(--text-light);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+.meaning-text {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 8px;
+            line-height: 1.4;
+        }
+
+/* --- BUTANG MIC --- */
+        .mic-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary-gold);
+            border: none;
+            cursor: pointer;
+            font-size: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s;
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+            margin-bottom: 15px;
+        }
+        .mic-btn:active { transform: scale(0.95); }
+        .mic-btn.listening {
+            background: var(--error);
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+
+@keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+.status-text {
+            font-size: 0.9rem;
+            font-weight: 600;
+            min-height: 24px;
+            color: var(--secondary-gold);
+            text-align: center;
+        }
+
+/* --- KANDUNGAN KAD --- */
+        .greeting-content {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 1s ease 0.5s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; 
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .card.open .greeting-content {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+/* --- ARAHAN NYALAKAN PELITA --- */
+        .light-instruction-text {
+            position: absolute;
+            top: 40%;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+            color: var(--secondary-gold);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            animation: pulseText 2s infinite ease-in-out;
+            opacity: 0; /* Mula hidden, JS akan aktifkan */
+            transition: opacity 0.5s;
+            pointer-events: none;
+            z-index: 5;
+        }
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+/* --- FINALE GREETING (UCAPAN AKHIR) --- */
+        .finale-greeting {
+            position: absolute;
+            top: 15%;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 1.5s ease-out;
+            z-index: 20;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        .finale-greeting.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .finale-arab {
+            font-family: 'Amiri', serif;
+            font-size: 3.5rem;
+            color: var(--primary-gold);
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 2px 5px #000;
+            margin-bottom: 10px;
+        }
+        .finale-main {
+            font-family: 'Great Vibes', cursive;
+            font-size: 2.5rem;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 2px 5px #000;
+            margin-bottom: 5px;
+        }
+        .finale-sub {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            max-width: 80%;
+            line-height: 1.4;
+            background: rgba(0,0,0,0.4);
+            padding: 5px 10px;
+            border-radius: 10px;
+        }
+
+/* --- FEATURE PELITA (DESIGN BARU) --- */
+        .pelita-area {
+            position: absolute;
+            top: 55%; 
+            width: 100%;
+            height: auto;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: flex-end; 
+            z-index: 10;
+        }
+
+.torch-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+            position: relative;
+        }
+        .torch-wrapper:hover { transform: translateY(-5px); }
+
+.torch-pole {
+            width: 6px;
+            height: 200px; 
+            background: linear-gradient(to right, #5d4037, #8d6e63);
+            border-radius: 0 0 4px 4px;
+            margin-top: -5px;
+            z-index: 1;
+        }
+
+.torch-head {
+            position: relative;
+            width: 40px;
+            height: 55px;
+            z-index: 2;
+        }
+
+.fuel-can {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 30px;
+            height: 45px;
+            background: linear-gradient(135deg, #2e7d32, #4caf50);
+            border-radius: 4px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+
+.wick {
+            position: absolute;
+            top: 0px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 6px;
+            background: #bdbdbd;
+            border-radius: 2px;
+            z-index: 1;
+        }
+
+.bamboo-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+        .bamboo-frame::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-left: 3px solid #d7ccc8; 
+            border-right: 3px solid #d7ccc8; 
+            box-sizing: border-box;
+            border-radius: 2px;
+        }
+        .bamboo-frame::after {
+            content: '';
+            position: absolute;
+            top: 30%;
+            left: -2px;
+            width: calc(100% + 4px);
+            height: 40%;
+            border-top: 3px solid #a1887f;
+            border-bottom: 3px solid #a1887f;
+        }
+
+.flame {
+            position: absolute;
+            top: -30px; left: 50%;
+            transform: translateX(-50%) scale(0);
+            width: 16px; height: 32px;
+            background: linear-gradient(to top, var(--flame-orange), var(--flame-yellow));
+            border-radius: 50% 50% 20% 20%;
+            opacity: 0;
+            transition: all 0.4s ease;
+            filter: drop-shadow(0 0 8px var(--flame-orange));
+            z-index: 4;
+        }
+
+.torch-wrapper.nyala .flame {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
+            animation: flicker 0.5s infinite alternate;
+            box-shadow: 0 0 15px var(--flame-orange), 0 0 30px rgba(255, 193, 7, 0.6);
+        }
+
+@keyframes flicker {
+            0% { transform: translateX(-50%) scale(1); opacity: 0.9; height: 32px; }
+            100% { transform: translateX(-50%) scale(1.1); opacity: 1; height: 36px; }
+        }
+
+/* --- MUSIC BARS --- */
+        .music-bars {
+            position: absolute;
+            bottom: 30px; 
+            display: flex; 
+            align-items: flex-end; 
+            height: 30px; 
+            gap: 4px; 
+        }
+        .bar {
+            width: 4px; 
+            background: var(--primary-gold); 
+            animation: bounce 1s infinite ease-in-out; 
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        .bar:nth-child(1) { height: 10px; animation-delay: 0s; }
+        .bar:nth-child(2) { height: 20px; animation-delay: 0.2s; }
+        .bar:nth-child(3) { height: 15px; animation-delay: 0.4s; }
+        .bar:nth-child(4) { height: 25px; animation-delay: 0.1s; }
+        .bar:nth-child(5) { height: 10px; animation-delay: 0.3s; }
+        @keyframes bounce { 
+            0%, 100% { transform: scaleY(1); } 
+            50% { transform: scaleY(2); } 
+        }
+    </style>
+</head>
+<body>
+
+<div id="introOverlay">
+        <video id="introVideo" playsinline>
+            <source src="https://arleta.site/interactivelink/3085/lv_0_20260216133347.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <button id="startVideoBtn">Tonton Video Ucapan Raya Ini</button>
+    </div>
+
+<div class="background-image"></div>
+    <div class="dark-overlay" id="mainOverlay"></div>
+
+<div class="container">
+        <div class="card" id="mainCard">
+
+<div class="lock-overlay" id="lockScreen">
+                <div class="icon-header">🌙</div>
+                <div class="instruction">
+                    Sila baca niat puasa di bawah (dalam Arab atau Rumi) untuk membuka kad.
+                </div>
+
+<div class="niat-box">
+                    <div class="arabic-text" dir="rtl">
+                        نَوَيْتُ صَوْمَ غَدٍ عَنْ أَدَاءِ فَرْضِ رَمَضَانَ هَذِهِ السَّنَةِ لِلَّهِ تَعَالَى
+                    </div>
+                    <div class="rumi-text">
+                        "Nawaitu sauma ghadin 'an ada-i fardhi Ramadhana hadzihis sanati lillahi ta'ala"
+                    </div>
+                    <div class="meaning-text">
+                        (Sahaja aku berpuasa esok hari menunaikan fardu Ramadan tahun ini kerana Allah Taala)
+                    </div>
+                </div>
+
+<button class="mic-btn" id="micBtn">🎙️</button>
+                <div class="status-text" id="statusText">Tekan Mikrofon & Baca</div>
+            </div>
+
+<div class="greeting-content">
+
+<div class="light-instruction-text" id="lightInstruction">
+                    ✨ Sentuh pelita untuk menerangi malam ✨
+                </div>
+
+<div class="finale-greeting" id="finaleGreeting">
+                    <div class="finale-arab">رمضان كريم</div>
+                    <div class="finale-main">Salam Ramadan</div>
+                    <div class="finale-sub">Semoga bulan ini penuh keberkatan, ketenangan, dan cahaya keimanan untuk anda dan keluarga.</div>
+                </div>
+
+<div class="pelita-area">
+                    <div class="torch-wrapper" onclick="togglePelita(this)">
+                        <div class="torch-head">
+                            <div class="flame"></div>
+                            <div class="wick"></div>
+                            <div class="fuel-can"></div>
+                            <div class="bamboo-frame"></div>
+                        </div>
+                        <div class="torch-pole"></div>
+                    </div>
+
+<div class="torch-wrapper" onclick="togglePelita(this)" style="margin-bottom: 20px;">
+                        <div class="torch-head">
+                            <div class="flame"></div>
+                            <div class="wick"></div>
+                            <div class="fuel-can"></div>
+                            <div class="bamboo-frame"></div>
+                        </div>
+                        <div class="torch-pole"></div>
+                    </div>
+
+<div class="torch-wrapper" onclick="togglePelita(this)">
+                        <div class="torch-head">
+                            <div class="flame"></div>
+                            <div class="wick"></div>
+                            <div class="fuel-can"></div>
+                            <div class="bamboo-frame"></div>
+                        </div>
+                        <div class="torch-pole"></div>
+                    </div>
+                </div>
+
+<div class="music-bars">
+                    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    <div class="bar"></div><div class="bar"></div>
+                </div>
+
+</div>
+
+</div>
+    </div>
+
+<script>
+        // --- 0. VIDEO LOGIC (BARU) ---
+        const introOverlay = document.getElementById('introOverlay');
+        const introVideo = document.getElementById('introVideo');
+        const startVideoBtn = document.getElementById('startVideoBtn');
+
+        startVideoBtn.addEventListener('click', () => {
+            startVideoBtn.style.display = 'none'; // Sembunyikan button
+            introVideo.play().catch(e => {
+                console.log("Video play failed", e);
+                // Jika fail (jarang berlaku bila user click), terus skip
+                endVideoIntro();
+            });
+        });
+
+        introVideo.addEventListener('ended', endVideoIntro);
+
+        function endVideoIntro() {
+            introOverlay.classList.add('hidden');
+            // Intro overlay akan hilang, dan mendedahkan Lock Screen di belakangnya.
+        }
+
+        // --- 1. SETUP AUDIO ---
+        const audioUrl = "https://arleta.site/interactivelink/3085/Muzik-sebelum-berbuka-puasa-yang-nostalgia-di-radio.mp3";
+        const bgAudio = new Audio(audioUrl);
+        bgAudio.loop = true;
+        let audioCtx; 
+
+        // --- 2. SETUP DOM ---
+        const micBtn = document.getElementById('micBtn');
+        const statusText = document.getElementById('statusText');
+        const lockScreen = document.getElementById('lockScreen');
+        const mainCard = document.getElementById('mainCard');
+        const mainOverlay = document.getElementById('mainOverlay');
+        const bgImageDiv = document.querySelector('.background-image');
+        const lightInstruction = document.getElementById('lightInstruction');
+        const finaleGreeting = document.getElementById('finaleGreeting');
+
+        // --- 3. SPEECH RECOGNITION ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isListening = false;
+        let failCount = 0;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ar-SA'; 
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            micBtn.addEventListener('click', () => {
+                if (!isListening) {
+                    if (bgAudio.paused) {
+                        bgAudio.volume = 0; 
+                        bgAudio.play().then(() => {
+                            bgAudio.pause(); bgAudio.volume = 1; bgAudio.currentTime = 0;
+                        }).catch(e => console.log("Audio unlock"));
+                    }
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                    recognition.start();
+                    isListening = true;
+                    micBtn.classList.add('listening');
+                    statusText.textContent = "Sedang Mendengar...";
+                    statusText.style.color = "#fff";
+                }
+            });
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                validateInputImproved(transcript);
+                isListening = false;
+                micBtn.classList.remove('listening');
+            };
+
+            recognition.onerror = (event) => {
+                isListening = false;
+                micBtn.classList.remove('listening');
+                console.error(event.error);
+                if(event.error === 'no-speech') {
+                    statusText.textContent = "Tiada suara dikesan.";
+                } else {
+                    statusText.textContent = "Cuba lagi.";
+                }
+                statusText.style.color = "#ef4444";
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                micBtn.classList.remove('listening');
+            };
+
+        } else {
+            micBtn.style.display = 'none';
+            statusText.innerHTML = "Browser tidak disokong.<br><u onclick='unlockCard()' style='cursor:pointer'>Buka Manual</u>";
+        }
+
+        // --- 4. VALIDASI FLEXIBLE ---
+        function validateInputImproved(transcript) {
+            const lowerText = transcript.toLowerCase();
+            const cleanArab = normalizeArabic(transcript);
+            const keywords = [
+                'نويت', 'صوم', 'غد', 'فرض', 'رمضان', 'سنة', 'لله', 'تعالى',
+                'nawaitu', 'sauma', 'ghadin', 'fardi', 'fardhu', 'ramadan', 'ramadhan', 'sanati', 'lillah', 'taala', 'puasa'
+            ];
+
+            let matchCount = 0;
+            keywords.forEach(word => {
+                if (cleanArab.includes(word) || lowerText.includes(word)) {
+                    matchCount++;
+                }
+            });
+
+            if (matchCount >= 2) {
+                statusText.textContent = "Alhamdulillah! ✨";
+                statusText.style.color = "#22c55e";
+                setTimeout(unlockCard, 800);
+            } else {
+                failCount++;
+                if (failCount >= 3) {
+                    statusText.textContent = "Diterima ✨";
+                    statusText.style.color = "#22c55e";
+                    setTimeout(unlockCard, 1000);
+                } else {
+                    statusText.textContent = "Kurang jelas, sebut 'Nawaitu' & 'Ramadan'";
+                    statusText.style.color = "#ef4444";
+                }
+            }
+        }
+
+        // --- 5. FUNGSI BUKA KAD ---
+        function unlockCard() {
+            bgAudio.play().catch(e => console.log("Autoplay blocked:", e));
+            lockScreen.classList.add('hidden');
+            mainCard.classList.add('open');
+            bgImageDiv.style.backgroundImage = "url('https://arleta.site/interactivelink/3085/177121062028.jpeg')";
+            mainOverlay.style.background = "rgba(0, 0, 0, 0.75)";
+
+            // Paparkan arahan nyalakan pelita
+            setTimeout(() => {
+                lightInstruction.style.opacity = '1';
+            }, 800);
+        }
+
+        // --- 6. INTERAKSI PELITA & FINALE ---
+        function togglePelita(element) {
+            if (!element.classList.contains('nyala')) {
+                element.classList.add('nyala');
+                playMatchSound();
+
+                const litPelita = document.querySelectorAll('.torch-wrapper.nyala').length;
+                const totalPelita = 3;
+
+                // Efek Pencahayaan
+                let newOpacity;
+                if (litPelita === 1) newOpacity = 0.60;
+                else if (litPelita === 2) newOpacity = 0.40;
+                else if (litPelita === 3) newOpacity = 0.10;
+                
+                mainOverlay.style.background = `rgba(0, 0, 0, ${newOpacity})`;
+
+                // Trigger FINALE bila SEMUA menyala
+                if (litPelita === totalPelita) {
+                    
+                    // STOP ANIMATION supaya opacity boleh berubah
+                    lightInstruction.style.animation = 'none';
+                    // Hilangkan arahan
+                    lightInstruction.style.opacity = '0';
+                    
+                    // Tunggu text hilang (transition CSS 0.5s), baru tunjuk ucapan
+                    setTimeout(() => {
+                        finaleGreeting.classList.add('show');
+                    }, 800);
+                }
+            }
+        }
+
+        function playMatchSound() {
+            if (!audioCtx) return;
+            const bufferSize = audioCtx.sampleRate * 0.1; 
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'highpass'; filter.frequency.value = 1000;
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            noise.connect(filter); filter.connect(gainNode); gainNode.connect(audioCtx.destination);
+            noise.start();
+        }
+
+        function normalizeArabic(text) {
+            return text.replace(/[\u064B-\u065F]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').trim();
+        }
+    </script>
+</body>
+</html>
